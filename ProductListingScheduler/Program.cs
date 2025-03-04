@@ -14,12 +14,6 @@ var host = Host.CreateDefaultBuilder(args)
         logging.ClearProviders();
         logging.AddConsole();
     
-    
-    
-    
-    
-    
-    
     })
     .ConfigureServices((context, services) =>
     {

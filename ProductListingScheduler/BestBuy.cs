@@ -5,16 +5,37 @@ using System.Text;
 using System.Threading.Tasks;
 using OfficeOpenXml;
 using System.IO;
+using System.Drawing;
+using ProductListingScheduler.CommonClasses;
+using ProductListingScheduler.API_Services;
 
 namespace ProductListingScheduler
 {
     class BestBuy
     {
+        private readonly IBesBuy _bestBuyRepo;
+        public BestBuy(IBesBuy bestBuyRepo)
+        {
+            this._bestBuyRepo = bestBuyRepo;
+        }
         public async Task ListProductsOnBestBuy()
         {
+            string folderPath = @"C:\Users\ADMIN\OneDrive\Desktop\AutomationTrial\BestBuy";
+            string filePath = Path.Combine(folderPath, "BestBuyListingTemplate.xlsx");
 
-            //ReadExcel file stored in a folder and get the product details
+            //1.ReadExcel file stored in a folder and get the product details
             List<ReadZohoFile> products = ReadExcelFile();
+
+            //2.Send readed data to marketplace template
+            WriteToBestBuy(products);
+
+
+            //Api to send file on marketplace
+            int result=_bestBuyRepo.ListProductOnBestBuy(filePath);
+
+
+            //3.Clean the template file
+            CleanExcelFile(filePath);
 
 
             foreach (var product in products)
@@ -185,8 +206,110 @@ namespace ProductListingScheduler
         private static bool GetBoolValue(ExcelWorksheet ws, int row, Dictionary<string, int> map, string columnName)
             => map.ContainsKey(columnName) && ws.Cells[row, map[columnName]].Text.Trim().ToLower() == "yes";
 
-    //Write to Excel File logic For Bestbuy
+        //Write to Excel File logic For Bestbuy
 
-    
+        public void WriteToBestBuy(List<ReadZohoFile> products)
+        {
+            string folderPath = @"C:\Users\ADMIN\OneDrive\Desktop\AutomationTrial\BestBuy";
+            string filePath = Path.Combine(folderPath, "BestBuyListingTemplate.xlsx");
+
+            // Ensure the folder exists
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            FileInfo fileInfo = new FileInfo(filePath);
+
+            using (var package = new ExcelPackage(fileInfo))
+            {
+                ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Assuming the data is in the first worksheet
+
+                int startRow = worksheet.Dimension.End.Row + 1; // Start writing after the last row
+
+                // Write the data rows
+                for (int i = 0; i < products.Count; i++)
+                {
+                    var product = products[i];
+                    int row = startRow + i;
+                    worksheet.Cells[row, 1].Value = product.MasterSKU;//category
+                    worksheet.Cells[row, 2].Value = product.SKU;//sku
+                    worksheet.Cells[row, 3].Value = product.TitleBestBuy;//title
+                    worksheet.Cells[row, 4].Value = product.ShortDescription;//short description
+                    worksheet.Cells[row, 5].Value = product.Brand;//brand
+                    worksheet.Cells[row, 6].Value = product.UPC;//upc
+                    worksheet.Cells[row, 7].Value = product.Model;//model number
+                    worksheet.Cells[row, 8].Value = product.MPN;//MPN
+                    worksheet.Cells[row, 9].Value = product.Description;//long decription
+                    worksheet.Cells[row, 10].Value = product.Image1;//image 1
+                    worksheet.Cells[row, 11].Value = product.Image2;//image 2
+                    worksheet.Cells[row, 12].Value = product.Image3;//image 3
+                    worksheet.Cells[row, 13].Value = product.Image4;//image 4
+                    worksheet.Cells[row, 20].Value = product.WebHierarchy;//web hierarch
+                    worksheet.Cells[row, 26].Value = product.ProductCondition;//Product condition
+                    worksheet.Cells[row, 27].Value = product.BoxContains;//whats in the box
+                    worksheet.Cells[row, 28].Value = product.ProductSize;//Screen size
+                    worksheet.Cells[row, 29].Value = product.Processor;//Processor type
+                    worksheet.Cells[row, 30].Value = product.Memory;//Ram Size
+                    worksheet.Cells[row, 34].Value = product.BacklitKeyboard;//--Keyboard Language
+                    worksheet.Cells[row, 35].Value = product.BacklitKeyboard;//Backlit Keyboard
+                    worksheet.Cells[row, 36].Value = product.PortsInputOutput;//other input/output ports
+                    worksheet.Cells[row, 37].Value = product.OSPlatform;//Platform
+                    worksheet.Cells[row, 43].Value = product.Color;//color
+                    worksheet.Cells[row, 47].Value = product.OS;//operating system
+                    worksheet.Cells[row, 49].Value = product.ProcessorSpeed;//Processor Spee
+                    worksheet.Cells[row, 54].Value = product.ProcessorGraphics;//Operating System Language
+                    worksheet.Cells[row, 56].Value = product.ProcessorCount;//Processor Core
+                    worksheet.Cells[row, 57].Value = product.TouchScreen;//Touch screen Display 
+                   worksheet.Cells[row, 61].Value = product.StorageHDD;//Hard disk drive capacity
+                    worksheet.Cells[row, 62].Value = product.StorageSSD;//SSD capacity
+                    worksheet.Cells[row, 63].Value = product.GraphicsGPU;//Graphics card
+                    worksheet.Cells[row, 66].Value = product.Width;//width
+                    worksheet.Cells[row, 67].Value = product.Height;//Height
+                    worksheet.Cells[row, 68].Value = product.Depth;//Depth
+                    worksheet.Cells[row, 69].Value = product.Weight;//Weight
+                    worksheet.Cells[row, 81].Value = product.MemoryType;//RAM Type
+                    worksheet.Cells[row, 90].Value = product.ProcessorGeneration;//Processor Generation/Serie
+                    worksheet.Cells[row, 92].Value = product.ProductCondition;//Product condition
+                    worksheet.Cells[row, 110].Value = product.Processor;//Processor type
+                    worksheet.Cells[row, 145].Value = product.ScreenResolution;//Resolution
+                  
+                }
+
+                // Save the Excel file
+                package.Save();
+            }
+
+
+        }
+
+
+        //Clean the bestbuy template file
+        public void CleanExcelFile(string filePath)
+        {
+            FileInfo fileInfo = new FileInfo(filePath);
+
+            using (var package = new ExcelPackage(fileInfo))
+            {
+                ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Assuming the data is in the first worksheet
+
+                int startRow = 3; // Start cleaning from the 4th row
+                int endRow = worksheet.Dimension.End.Row; // Get the last row
+
+                //for (int row = startRow; row <= endRow; row++)
+                //{
+                //    worksheet.DeleteRow(row);
+                //}
+                if (endRow >= 3)  // Ensure there are at least 3 rows
+                {
+                    worksheet.DeleteRow(3, endRow - 2); // Delete rows starting from 3rd row
+                }
+
+                // Save the changes
+                package.Save();
+            }
+        }
+
+
     }
 }

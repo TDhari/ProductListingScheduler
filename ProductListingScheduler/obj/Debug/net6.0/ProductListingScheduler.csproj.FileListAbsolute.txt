@@ -59,3 +59,4 @@ C:\Users\ADMIN\OneDrive\Desktop\ProductListingScheduler\ProductListingScheduler\
 C:\Users\ADMIN\OneDrive\Desktop\ProductListingScheduler\ProductListingScheduler\obj\Debug\net6.0\ProductListingScheduler.genruntimeconfig.cache
 C:\Users\ADMIN\OneDrive\Desktop\ProductListingScheduler\ProductListingScheduler\obj\Debug\net6.0\ref\ProductListingScheduler.dll
 C:\Users\ADMIN\OneDrive\Desktop\ProductListingScheduler\ProductListingScheduler\obj\Debug\net6.0\ProductListingScheduler.sourcelink.json
+C:\Users\ADMIN\OneDrive\Desktop\ProductListingScheduler\ProductListingScheduler\bin\Debug\net6.0\Newtonsoft.Json.dll

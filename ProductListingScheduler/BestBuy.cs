@@ -8,6 +8,8 @@ using System.IO;
 using System.Drawing;
 using ProductListingScheduler.CommonClasses;
 using ProductListingScheduler.API_Services;
+using ProductListingScheduler.CommonFunction;
+using System.Text.RegularExpressions;
 
 namespace ProductListingScheduler
 {
@@ -17,6 +19,7 @@ namespace ProductListingScheduler
         public BestBuy(IBesBuy bestBuyRepo)
         {
             this._bestBuyRepo = bestBuyRepo;
+        
         }
         public async Task ListProductsOnBestBuy()
         {
@@ -31,19 +34,22 @@ namespace ProductListingScheduler
 
 
             //Api to send file on marketplace
-            int result=_bestBuyRepo.ListProductOnBestBuy(filePath);
+             // int result=_bestBuyRepo.ListProductOnBestBuy(filePath);
+
+            //store file in backup folder
+            StoreFileInBackupFolder(filePath);
 
 
             //3.Clean the template file
             CleanExcelFile(filePath);
 
 
-            foreach (var product in products)
-            {
-                //write a code to list the product on BestBuy
-                Console.WriteLine($"Product listed on BestBuy: {product.SKU}");
-                Console.ReadLine();
-            }
+            //foreach (var product in products)
+            //{
+            //    //write a code to list the product on BestBuy
+            //    Console.WriteLine($"Product listed on BestBuy: {product.SKU}");
+            //    Console.ReadLine();
+          //  }
 
         }
 
@@ -91,10 +97,10 @@ namespace ProductListingScheduler
                     }
                 }
 
-                foreach (var item in columnMapping)
-                {
-                    Console.WriteLine($"{item.Key} - {item.Value}");
-                }
+               // foreach (var item in columnMapping)
+              //  {
+               //     Console.WriteLine($"{item.Key} - {item.Value}");
+              //  }
                
 
                 //Remove
@@ -231,8 +237,39 @@ namespace ProductListingScheduler
                 for (int i = 0; i < products.Count; i++)
                 {
                     var product = products[i];
+
+                    //get category
+                   string category= CommonFuntions.GetCategory(product.Category.ToLower().Trim());
+
+                    //get dimensions
+                    double height = CommonFuntions.ConvertInchesToCm(Convert.ToDouble(product.Height));
+                    double width = CommonFuntions.ConvertInchesToCm(Convert.ToDouble(product.Width));
+                    double depth = CommonFuntions.ConvertInchesToCm(Convert.ToDouble(product.Depth));
+                    double weight = CommonFuntions.ConvertLbToKg(Convert.ToDouble(product.Weight));
+
+                    //keyboard language
+                    string keyboardlanguage = "";
+                    if (product.KeyboardLayout.ToLower().Contains("english"))
+                    {
+                         keyboardlanguage = "English";
+                    }else if (product.KeyboardLayout.ToLower().Contains("french"))
+                    {
+                         keyboardlanguage = "French";
+                    }
+                    else if (product.KeyboardLayout.ToLower().Contains("bilingual"))
+                    {
+                         keyboardlanguage = "Bilingual";
+                    }else
+                    {
+                        keyboardlanguage = " ";
+                    }
+                    //get product condition
+                    string productConditionw = Regex.Replace(product.ProductCondition, @"[()\[\]{}]", "");
+                    string productCondition = CommonFuntions.GetProductCondition(productConditionw.ToLower().Trim().Replace(" ", ""));
+
+
                     int row = startRow + i;
-                    worksheet.Cells[row, 1].Value = product.MasterSKU;//category
+                    worksheet.Cells[row, 1].Value = category;//category
                     worksheet.Cells[row, 2].Value = product.SKU;//sku
                     worksheet.Cells[row, 3].Value = product.TitleBestBuy;//title
                     worksheet.Cells[row, 4].Value = product.ShortDescription;//short description
@@ -246,28 +283,33 @@ namespace ProductListingScheduler
                     worksheet.Cells[row, 12].Value = product.Image3;//image 3
                     worksheet.Cells[row, 13].Value = product.Image4;//image 4
                     worksheet.Cells[row, 20].Value = product.WebHierarchy;//web hierarch
-                    worksheet.Cells[row, 26].Value = product.ProductCondition;//Product condition
+                    worksheet.Cells[row, 26].Value = productCondition;// Product condition
                     worksheet.Cells[row, 27].Value = product.BoxContains;//whats in the box
                     worksheet.Cells[row, 28].Value = product.ProductSize;//Screen size
                     worksheet.Cells[row, 29].Value = product.Processor;//Processor type
-                    worksheet.Cells[row, 30].Value = product.Memory;//Ram Size
-                    worksheet.Cells[row, 34].Value = product.BacklitKeyboard;//--Keyboard Language
+                    worksheet.Cells[row, 30].Value = product.Memory.ToString().Replace("GB", "").Trim();//Ram Size
+                    if (keyboardlanguage!="")
+                    {
+                        worksheet.Cells[row, 34].Value = keyboardlanguage;//--Keyboard Language
+                    }
+                    
                     worksheet.Cells[row, 35].Value = product.BacklitKeyboard;//Backlit Keyboard
+
                     worksheet.Cells[row, 36].Value = product.PortsInputOutput;//other input/output ports
-                    worksheet.Cells[row, 37].Value = product.OSPlatform;//Platform
+                    //worksheet.Cells[row, 37].Value = product.OSPlatform;//product platform
                     worksheet.Cells[row, 43].Value = product.Color;//color
                     worksheet.Cells[row, 47].Value = product.OS;//operating system
                     worksheet.Cells[row, 49].Value = product.ProcessorSpeed;//Processor Spee
-                    worksheet.Cells[row, 54].Value = product.ProcessorGraphics;//Operating System Language
+                    //worksheet.Cells[row, 54].Value = product.ProcessorGraphics;//Operating System Language
                     worksheet.Cells[row, 56].Value = product.ProcessorCount;//Processor Core
                     worksheet.Cells[row, 57].Value = product.TouchScreen;//Touch screen Display 
-                   worksheet.Cells[row, 61].Value = product.StorageHDD;//Hard disk drive capacity
-                    worksheet.Cells[row, 62].Value = product.StorageSSD;//SSD capacity
+                    worksheet.Cells[row, 61].Value = product.StorageHDD.Replace("GB", "").Trim();//Hard disk drive capacity
+                    worksheet.Cells[row, 62].Value = product.StorageSSD.Replace("GB", "").Trim();//SSD capacity
                     worksheet.Cells[row, 63].Value = product.GraphicsGPU;//Graphics card
-                    worksheet.Cells[row, 66].Value = product.Width;//width
-                    worksheet.Cells[row, 67].Value = product.Height;//Height
-                    worksheet.Cells[row, 68].Value = product.Depth;//Depth
-                    worksheet.Cells[row, 69].Value = product.Weight;//Weight
+                    worksheet.Cells[row, 66].Value = width;//width
+                    worksheet.Cells[row, 67].Value = height;//Height
+                    worksheet.Cells[row, 68].Value = depth;//Depth
+                    worksheet.Cells[row, 69].Value = weight;//Weight
                     worksheet.Cells[row, 81].Value = product.MemoryType;//RAM Type
                     worksheet.Cells[row, 90].Value = product.ProcessorGeneration;//Processor Generation/Serie
                     worksheet.Cells[row, 92].Value = product.ProductCondition;//Product condition
@@ -296,10 +338,7 @@ namespace ProductListingScheduler
                 int startRow = 3; // Start cleaning from the 4th row
                 int endRow = worksheet.Dimension.End.Row; // Get the last row
 
-                //for (int row = startRow; row <= endRow; row++)
-                //{
-                //    worksheet.DeleteRow(row);
-                //}
+                
                 if (endRow >= 3)  // Ensure there are at least 3 rows
                 {
                     worksheet.DeleteRow(3, endRow - 2); // Delete rows starting from 3rd row
@@ -308,6 +347,32 @@ namespace ProductListingScheduler
                 // Save the changes
                 package.Save();
             }
+        }
+
+
+        //store file in backup folder
+
+        public void StoreFileInBackupFolder(string filePath)
+        {
+            string folderPath = @"C:\Users\ADMIN\OneDrive\Desktop\AutomationTrial\BestBuyBackup\Products";
+            //string fileName = Path.GetFileName(filePath);
+            //string backupFilePath = Path.Combine(folderPath, fileName);
+            // Ensure the folder exists
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            // Generate a timestamped backup filename
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            string extension = Path.GetExtension(filePath);
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string backupFileName = $"{fileName}_Backup_{timestamp}{extension}";
+            string backupFilePath = Path.Combine(folderPath, backupFileName);
+
+            // Copy file to backup location
+            File.Copy(filePath, backupFilePath, true);
+
         }
 
 

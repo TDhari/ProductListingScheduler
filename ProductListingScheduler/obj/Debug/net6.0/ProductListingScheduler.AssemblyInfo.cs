@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ProductListingScheduler")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dee0fe76190db8dd4163000f2b2425d9bba0ecfb")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a2333edb633f9c45ad1d3fdc438da45bf9ffae75")]
 [assembly: System.Reflection.AssemblyProductAttribute("ProductListingScheduler")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ProductListingScheduler")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

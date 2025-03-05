@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using ProductListingScheduler.API_Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -54,11 +55,13 @@ namespace ProductListingScheduler
 
         private async Task ListProductsOnBestBuy()
         {
-            Console.WriteLine("Listing products on BestBuy...........................");
+            Console.WriteLine("................Listing products on BestBuy Method running....................");
             try
             {
                 await Task.Delay(2000); // Simulating API call
-                BestBuy bestBuy = new BestBuy();
+                IBesBuy bestBuyRepo = new BestBuyRepo();
+
+                BestBuy bestBuy = new BestBuy(bestBuyRepo);
                 await bestBuy.ListProductsOnBestBuy();
 
                 Log("BestBuy listing completed.");

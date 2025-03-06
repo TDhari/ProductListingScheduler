@@ -9,5 +9,6 @@ namespace ProductListingScheduler.API_Services
     interface IBesBuy
     {
         int ListProductOnBestBuy(string filePath);
+        void CreateOffersOnBestBuy(string file);
     }
 }

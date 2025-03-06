@@ -25,6 +25,7 @@ namespace ProductListingScheduler
         {
             string folderPath = @"C:\Users\ADMIN\OneDrive\Desktop\AutomationTrial\BestBuy";
             string filePath = Path.Combine(folderPath, "BestBuyListingTemplate.xlsx");
+            string filePathOffer = Path.Combine(folderPath, "BestBuyOffersTemplate.xlsx");
 
             //1.ReadExcel file stored in a folder and get the product details
             List<ReadZohoFile> products = ReadExcelFile();
@@ -34,22 +35,19 @@ namespace ProductListingScheduler
 
 
             //Api to send file on marketplace
-             // int result=_bestBuyRepo.ListProductOnBestBuy(filePath);
+            int result=_bestBuyRepo.ListProductOnBestBuy(filePath);
+
+            //APi to send offer file on marketplace
+            _bestBuyRepo.CreateOffersOnBestBuy(filePathOffer);
 
             //store file in backup folder
             StoreFileInBackupFolder(filePath);
-
+            StoreFileInBackupFolder(filePathOffer);
 
             //3.Clean the template file
             CleanExcelFile(filePath);
-
-
-            //foreach (var product in products)
-            //{
-            //    //write a code to list the product on BestBuy
-            //    Console.WriteLine($"Product listed on BestBuy: {product.SKU}");
-            //    Console.ReadLine();
-          //  }
+            //clena offer file
+            CleanExcelFile(filePathOffer);
 
         }
 
@@ -218,6 +216,7 @@ namespace ProductListingScheduler
         {
             string folderPath = @"C:\Users\ADMIN\OneDrive\Desktop\AutomationTrial\BestBuy";
             string filePath = Path.Combine(folderPath, "BestBuyListingTemplate.xlsx");
+            string filePathOffer = Path.Combine(folderPath, "BestBuyOffersTemplate.xlsx");
 
             // Ensure the folder exists
             if (!Directory.Exists(folderPath))
@@ -226,103 +225,136 @@ namespace ProductListingScheduler
             }
 
             FileInfo fileInfo = new FileInfo(filePath);
+            FileInfo fileInfoOffer = new FileInfo(filePathOffer);
 
             using (var package = new ExcelPackage(fileInfo))
             {
-                ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Assuming the data is in the first worksheet
-
-                int startRow = worksheet.Dimension.End.Row + 1; // Start writing after the last row
-
-                // Write the data rows
-                for (int i = 0; i < products.Count; i++)
+                using (var packageOffer = new ExcelPackage(fileInfoOffer))
                 {
-                    var product = products[i];
+                    ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Assuming the data is in the first worksheet
+                    ExcelWorksheet worksheetOffer = packageOffer.Workbook.Worksheets[0]; // Assuming the data is in the first worksheet
 
-                    //get category
-                   string category= CommonFuntions.GetCategory(product.Category.ToLower().Trim());
+                    int startRow = worksheet.Dimension.End.Row + 1; // Start writing after the last row
 
-                    //get dimensions
-                    double height = CommonFuntions.ConvertInchesToCm(Convert.ToDouble(product.Height));
-                    double width = CommonFuntions.ConvertInchesToCm(Convert.ToDouble(product.Width));
-                    double depth = CommonFuntions.ConvertInchesToCm(Convert.ToDouble(product.Depth));
-                    double weight = CommonFuntions.ConvertLbToKg(Convert.ToDouble(product.Weight));
-
-                    //keyboard language
-                    string keyboardlanguage = "";
-                    if (product.KeyboardLayout.ToLower().Contains("english"))
+                    // Write the data rows
+                    for (int i = 0; i < products.Count; i++)
                     {
-                         keyboardlanguage = "English";
-                    }else if (product.KeyboardLayout.ToLower().Contains("french"))
-                    {
-                         keyboardlanguage = "French";
+                        var product = products[i];
+
+                        //get category
+                        string category = CommonFuntions.GetCategory(product.Category.ToLower().Trim());
+
+                        //get dimensions
+                        double height = CommonFuntions.ConvertInchesToCm(Convert.ToDouble(product.Height));
+                        double width = CommonFuntions.ConvertInchesToCm(Convert.ToDouble(product.Width));
+                        double depth = CommonFuntions.ConvertInchesToCm(Convert.ToDouble(product.Depth));
+                        double weight = CommonFuntions.ConvertLbToKg(Convert.ToDouble(product.Weight));
+
+                        //keyboard language
+                        string keyboardlanguage = "";
+                        if (product.KeyboardLayout.ToLower().Contains("english"))
+                        {
+                            keyboardlanguage = "English";
+                        }
+                        else if (product.KeyboardLayout.ToLower().Contains("french"))
+                        {
+                            keyboardlanguage = "French";
+                        }
+                        else if (product.KeyboardLayout.ToLower().Contains("bilingual"))
+                        {
+                            keyboardlanguage = "Bilingual";
+                        }
+                        else
+                        {
+                            keyboardlanguage = " ";
+                        }
+                        //get product condition
+                        string productConditionw = Regex.Replace(product.ProductCondition, @"[()\[\]{}]", "");
+                        string productCondition = CommonFuntions.GetProductCondition(productConditionw.ToLower().Trim().Replace(" ", ""));
+
+                        //get warranty
+                        int warranty = (Convert.ToInt32(product.Warranty)*365);
+
+                        //get today's date
+                        string todayDate = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:ss.fffK");
+                        DateTimeOffset now = DateTimeOffset.Now;
+                        DateTimeOffset lastDay = new DateTimeOffset(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month), 0, 0, 0, now.Offset);
+
+                        string lastdDateofMonth = lastDay.ToString("yyyy-MM-ddTHH:mm:ss.fffK");
+
+                        int row = startRow + i;
+                        worksheet.Cells[row, 1].Value = category;//category
+                        worksheet.Cells[row, 2].Value = product.SKU;//sku
+                        worksheet.Cells[row, 3].Value = product.TitleBestBuy;//title
+                        worksheet.Cells[row, 4].Value = product.ShortDescription;//short description
+                        worksheet.Cells[row, 5].Value = product.Brand;//brand
+                        worksheet.Cells[row, 6].Value = product.UPC;//upc
+                        worksheet.Cells[row, 7].Value = product.Model;//model number
+                        worksheet.Cells[row, 8].Value = product.MPN;//MPN
+                        worksheet.Cells[row, 9].Value = product.Description;//long decription
+                        worksheet.Cells[row, 10].Value = product.Image1;//image 1
+                        worksheet.Cells[row, 11].Value = product.Image2;//image 2
+                        worksheet.Cells[row, 12].Value = product.Image3;//image 3
+                        worksheet.Cells[row, 13].Value = product.Image4;//image 4
+                        worksheet.Cells[row, 20].Value = product.WebHierarchy;//web hierarch
+                        worksheet.Cells[row, 26].Value = productCondition;// Product condition
+                        worksheet.Cells[row, 27].Value = product.BoxContains;//whats in the box
+                        worksheet.Cells[row, 28].Value = product.ProductSize;//Screen size
+                        worksheet.Cells[row, 29].Value = product.Processor;//Processor type
+                        worksheet.Cells[row, 30].Value = product.Memory.ToString().Replace("GB", "").Trim();//Ram Size
+                        if (keyboardlanguage != "")
+                        {
+                            worksheet.Cells[row, 34].Value = keyboardlanguage;//--Keyboard Language
+                        }
+
+                        worksheet.Cells[row, 35].Value = product.BacklitKeyboard;//Backlit Keyboard
+
+                        worksheet.Cells[row, 36].Value = product.PortsInputOutput;//other input/output ports
+                                                                                  //worksheet.Cells[row, 37].Value = product.OSPlatform;//product platform
+                        worksheet.Cells[row, 43].Value = product.Color;//color
+                        worksheet.Cells[row, 47].Value = product.OS;//operating system
+                        worksheet.Cells[row, 49].Value = product.ProcessorSpeed;//Processor Spee
+                                                                                //worksheet.Cells[row, 54].Value = product.ProcessorGraphics;//Operating System Language
+                        worksheet.Cells[row, 56].Value = product.ProcessorCount;//Processor Core
+                        worksheet.Cells[row, 57].Value = product.TouchScreen;//Touch screen Display 
+                        worksheet.Cells[row, 61].Value = product.StorageHDD.Replace("GB", "").Trim();//Hard disk drive capacity
+                        worksheet.Cells[row, 62].Value = product.StorageSSD.Replace("GB", "").Trim();//SSD capacity
+                        worksheet.Cells[row, 63].Value = product.GraphicsGPU;//Graphics card
+                        worksheet.Cells[row, 66].Value = width;//width
+                        worksheet.Cells[row, 67].Value = height;//Height
+                        worksheet.Cells[row, 68].Value = depth;//Depth
+                        worksheet.Cells[row, 69].Value = weight;//Weight
+                        worksheet.Cells[row, 81].Value = product.MemoryType;//RAM Type
+                        worksheet.Cells[row, 90].Value = product.ProcessorGeneration;//Processor Generation/Serie
+                        worksheet.Cells[row, 92].Value = product.ProductCondition;//Product condition
+                        worksheet.Cells[row, 110].Value = product.Processor;//Processor type
+                        worksheet.Cells[row, 145].Value = product.ScreenResolution;//Resolution
+
+
+                        //write to offer file
+                        worksheetOffer.Cells[row, 1].Value = product.SKU;//sku
+                        worksheetOffer.Cells[row, 2].Value = product.UPC;//id
+                        worksheetOffer.Cells[row, 3].Value = "UPC-A";//id type
+                        worksheetOffer.Cells[row, 6].Value = product.RetailPrice;//price
+                        worksheetOffer.Cells[row, 8].Value = product.QTYAvailable;//quantity
+                        worksheetOffer.Cells[row, 9].Value = 2;//condition
+                        worksheetOffer.Cells[row, 10].Value = "New";//condition type
+                        worksheetOffer.Cells[row, 11].Value = todayDate;//avalabbility start date
+                        //worksheetOffer.Cells[row, 12].Value = "2099-12-31";//avalabbility end date
+                        worksheetOffer.Cells[row, 14].Value = product.ListPriceBestBuy;//discount price
+                        worksheetOffer.Cells[row, 15].Value = todayDate;//discount start date
+                        worksheetOffer.Cells[row, 16].Value = lastdDateofMonth;//discount end date
+                        worksheetOffer.Cells[row, 19].Value = warranty;//warranty in days
+
+
+
                     }
-                    else if (product.KeyboardLayout.ToLower().Contains("bilingual"))
-                    {
-                         keyboardlanguage = "Bilingual";
-                    }else
-                    {
-                        keyboardlanguage = " ";
-                    }
-                    //get product condition
-                    string productConditionw = Regex.Replace(product.ProductCondition, @"[()\[\]{}]", "");
-                    string productCondition = CommonFuntions.GetProductCondition(productConditionw.ToLower().Trim().Replace(" ", ""));
 
+                    // Save the Excel file
+                    package.Save();
+                    packageOffer.Save();                }
 
-                    int row = startRow + i;
-                    worksheet.Cells[row, 1].Value = category;//category
-                    worksheet.Cells[row, 2].Value = product.SKU;//sku
-                    worksheet.Cells[row, 3].Value = product.TitleBestBuy;//title
-                    worksheet.Cells[row, 4].Value = product.ShortDescription;//short description
-                    worksheet.Cells[row, 5].Value = product.Brand;//brand
-                    worksheet.Cells[row, 6].Value = product.UPC;//upc
-                    worksheet.Cells[row, 7].Value = product.Model;//model number
-                    worksheet.Cells[row, 8].Value = product.MPN;//MPN
-                    worksheet.Cells[row, 9].Value = product.Description;//long decription
-                    worksheet.Cells[row, 10].Value = product.Image1;//image 1
-                    worksheet.Cells[row, 11].Value = product.Image2;//image 2
-                    worksheet.Cells[row, 12].Value = product.Image3;//image 3
-                    worksheet.Cells[row, 13].Value = product.Image4;//image 4
-                    worksheet.Cells[row, 20].Value = product.WebHierarchy;//web hierarch
-                    worksheet.Cells[row, 26].Value = productCondition;// Product condition
-                    worksheet.Cells[row, 27].Value = product.BoxContains;//whats in the box
-                    worksheet.Cells[row, 28].Value = product.ProductSize;//Screen size
-                    worksheet.Cells[row, 29].Value = product.Processor;//Processor type
-                    worksheet.Cells[row, 30].Value = product.Memory.ToString().Replace("GB", "").Trim();//Ram Size
-                    if (keyboardlanguage!="")
-                    {
-                        worksheet.Cells[row, 34].Value = keyboardlanguage;//--Keyboard Language
-                    }
-                    
-                    worksheet.Cells[row, 35].Value = product.BacklitKeyboard;//Backlit Keyboard
-
-                    worksheet.Cells[row, 36].Value = product.PortsInputOutput;//other input/output ports
-                    //worksheet.Cells[row, 37].Value = product.OSPlatform;//product platform
-                    worksheet.Cells[row, 43].Value = product.Color;//color
-                    worksheet.Cells[row, 47].Value = product.OS;//operating system
-                    worksheet.Cells[row, 49].Value = product.ProcessorSpeed;//Processor Spee
-                    //worksheet.Cells[row, 54].Value = product.ProcessorGraphics;//Operating System Language
-                    worksheet.Cells[row, 56].Value = product.ProcessorCount;//Processor Core
-                    worksheet.Cells[row, 57].Value = product.TouchScreen;//Touch screen Display 
-                    worksheet.Cells[row, 61].Value = product.StorageHDD.Replace("GB", "").Trim();//Hard disk drive capacity
-                    worksheet.Cells[row, 62].Value = product.StorageSSD.Replace("GB", "").Trim();//SSD capacity
-                    worksheet.Cells[row, 63].Value = product.GraphicsGPU;//Graphics card
-                    worksheet.Cells[row, 66].Value = width;//width
-                    worksheet.Cells[row, 67].Value = height;//Height
-                    worksheet.Cells[row, 68].Value = depth;//Depth
-                    worksheet.Cells[row, 69].Value = weight;//Weight
-                    worksheet.Cells[row, 81].Value = product.MemoryType;//RAM Type
-                    worksheet.Cells[row, 90].Value = product.ProcessorGeneration;//Processor Generation/Serie
-                    worksheet.Cells[row, 92].Value = product.ProductCondition;//Product condition
-                    worksheet.Cells[row, 110].Value = product.Processor;//Processor type
-                    worksheet.Cells[row, 145].Value = product.ScreenResolution;//Resolution
-                  
-                }
-
-                // Save the Excel file
-                package.Save();
             }
-
-
         }
 
 
@@ -354,7 +386,17 @@ namespace ProductListingScheduler
 
         public void StoreFileInBackupFolder(string filePath)
         {
-            string folderPath = @"C:\Users\ADMIN\OneDrive\Desktop\AutomationTrial\BestBuyBackup\Products";
+            string folderPath = @"C:\Users\ADMIN\OneDrive\Desktop\AutomationTrial\BestBuyBackup";
+
+            if (filePath.Contains("Offer"))
+            {
+                 folderPath = @"C:\Users\ADMIN\OneDrive\Desktop\AutomationTrial\BestBuyBackup\Offers";
+            }
+            else
+            {
+                 folderPath = @"C:\Users\ADMIN\OneDrive\Desktop\AutomationTrial\BestBuyBackup\Products";
+            }
+                
             //string fileName = Path.GetFileName(filePath);
             //string backupFilePath = Path.Combine(folderPath, fileName);
             // Ensure the folder exists

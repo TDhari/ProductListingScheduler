@@ -10,6 +10,8 @@ using ProductListingScheduler.CommonClasses;
 using ProductListingScheduler.API_Services;
 using ProductListingScheduler.CommonFunction;
 using System.Text.RegularExpressions;
+using System.Net.Mail;
+using System.Net;
 
 namespace ProductListingScheduler
 {
@@ -415,6 +417,43 @@ namespace ProductListingScheduler
             // Copy file to backup location
             File.Copy(filePath, backupFilePath, true);
 
+        }
+
+        //send email
+        public void SendEmail()
+        {
+            try
+            {
+                // Email account configuration
+                string smtpServer = "smtp.zoho.com"; // Change based on your provider
+                int smtpPort = 587; // Use 465 for SSL, 587 for TLS
+                string senderEmail = "twinkle@dhari.ca";
+                string senderPassword = "password@dhari"; // Use app password if required
+                string recipientEmail = "twinkle@dhari.ca";
+
+                // Create email message
+                MailMessage mail = new MailMessage();
+                mail.From = new MailAddress(senderEmail);
+                mail.To.Add(recipientEmail);
+                mail.Subject = "Test Email from twinkle@dhari.ca";
+                mail.Body = "Hello, this is a test email sent from my C# application.";
+                mail.IsBodyHtml = false; // Set to true if sending HTML content
+
+                // Configure SMTP client
+                SmtpClient smtpClient = new SmtpClient(smtpServer, smtpPort)
+                {
+                    Credentials = new NetworkCredential(senderEmail, senderPassword),
+                    EnableSsl = true // Set to false if SSL is not required
+                };
+
+                // Send email
+                smtpClient.Send(mail);
+                Console.WriteLine("Email sent successfully from twinkle@dhari.ca.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error sending email: " + ex.Message);
+            }
         }
 
 

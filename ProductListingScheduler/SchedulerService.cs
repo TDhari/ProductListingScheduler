@@ -62,7 +62,9 @@ namespace ProductListingScheduler
                 IBesBuy bestBuyRepo = new BestBuyRepo();
 
                 BestBuy bestBuy = new BestBuy(bestBuyRepo);
-                await bestBuy.ListProductsOnBestBuy();
+                //await bestBuy.ListProductsOnBestBuy();
+
+                bestBuy.SendEmail();
 
                 Log("BestBuy listing completed.");
             }

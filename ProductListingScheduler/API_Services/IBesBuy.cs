@@ -10,5 +10,7 @@ namespace ProductListingScheduler.API_Services
     {
         int ListProductOnBestBuy(string filePath);
         void CreateOffersOnBestBuy(string file);
+
+        void CheckImportStatus(string url);
     }
 }

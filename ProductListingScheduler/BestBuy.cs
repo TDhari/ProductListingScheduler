@@ -422,6 +422,7 @@ namespace ProductListingScheduler
         //send email
         public void SendEmail()
         {
+
             try
             {
                 // Email account configuration

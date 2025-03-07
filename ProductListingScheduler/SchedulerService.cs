@@ -16,9 +16,6 @@ namespace ProductListingScheduler
         private readonly string errorLogPath = @"C:\Users\ADMIN\OneDrive\Desktop\AutomationTrial\Zoho\ErrorLogs\ErrorLog.txt";
 
 
-
-
-
         public SchedulerService(ILogger<SchedulerService> logger)
         {
             _logger = logger;
@@ -64,6 +61,7 @@ namespace ProductListingScheduler
                 BestBuy bestBuy = new BestBuy(bestBuyRepo);
                 //await bestBuy.ListProductsOnBestBuy();
 
+                
                 bestBuy.SendEmail();
 
                 Log("BestBuy listing completed.");

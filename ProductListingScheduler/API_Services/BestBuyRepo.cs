@@ -141,6 +141,8 @@ namespace ProductListingScheduler.API_Services
         //Check the import status
         public void CheckImportStatus(string url)
         {
+            //string url = "https://marketplace.bestbuy.ca/api/products/imports/1523349?shop_id=2523";working fine
+
             if (!string.IsNullOrEmpty(url))
             {
                 using (var client = new HttpClient())
@@ -160,7 +162,6 @@ namespace ProductListingScheduler.API_Services
             
         }
 
-       
     }
 }
  
